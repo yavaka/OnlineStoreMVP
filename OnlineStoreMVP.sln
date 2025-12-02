@@ -1,16 +1,10 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36221.1 d17.14
+VisualStudioVersion = 17.14.36221.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnlineStoreMVP.AppHost", "OnlineStoreMVP.AppHost\OnlineStoreMVP.AppHost.csproj", "{D9F0DE42-1762-4D78-B058-D5528589B32B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnlineStoreMVP.ServiceDefaults", "OnlineStoreMVP.ServiceDefaults\OnlineStoreMVP.ServiceDefaults.csproj", "{C63954A2-E413-BC7F-E65A-9D81E7E59576}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "components", "components", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
-	ProjectSection(SolutionItems) = preProject
-		pubsub.yaml = pubsub.yaml
-		statestore.yaml = statestore.yaml
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{0EBF14AE-B6BA-446D-8714-71194438CC9D}"
 EndProject
@@ -25,6 +19,11 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomersApi", "CustomersApi\CustomersApi.csproj", "{0DFDD4DD-4044-39C9-7433-6A39FF38EE2B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PaymentsApi", "PaymentsApi\PaymentsApi.csproj", "{DB599C31-FBA6-ECA6-EDD5-DFF3C06B8986}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{B8D7AD2B-DA20-4EF2-A86A-172E604E18FB}"
+	ProjectSection(SolutionItems) = preProject
+		Environment Prerequisites Setup.md = Environment Prerequisites Setup.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
