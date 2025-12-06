@@ -13,9 +13,10 @@ internal static class DaprHelpers
         var relativeYamlFolder = Path.Combine("Configurations", "dapr-components");
 
         // combine to get the runtime folder where the YAML files should be located
-        var yamlFolder = Path.Combine(basePath, relativeYamlFolder);
+        // Always use GetFullPath to ensure we have an absolute path
+        var yamlFolder = Path.GetFullPath(Path.Combine(basePath, relativeYamlFolder));
 
-        // fallback: when running from IDE some paths differ � try traversing up to project layout
+        // fallback: when running from IDE some paths differ - try traversing up to project layout
         if (!Directory.Exists(yamlFolder))
         {
             var alt = Path.GetFullPath(Path.Combine(basePath, "..", "..", "..", relativeYamlFolder));
@@ -25,11 +26,28 @@ internal static class DaprHelpers
             }
         }
 
+        // Ensure we have an absolute path (in case the fallback was used)
+        yamlFolder = Path.GetFullPath(yamlFolder);
+
         // optional runtime check (log or throw as appropriate)
         if (!Directory.Exists(yamlFolder))
         {
             // decide whether to throw or log; here we throw so you'll notice missing files during startup
             throw new DirectoryNotFoundException($"Dapr YAML folder not found: {yamlFolder}");
+        }
+
+        // Verify that the component files exist
+        var pubsubFile = Path.Combine(yamlFolder, "pubsub.yaml");
+        var statestoreFile = Path.Combine(yamlFolder, "statestore.yaml");
+        
+        if (!File.Exists(pubsubFile))
+        {
+            throw new FileNotFoundException($"Dapr component file not found: {pubsubFile}");
+        }
+
+        if (!File.Exists(statestoreFile))
+        {
+            throw new FileNotFoundException($"Dapr component file not found: {statestoreFile}");
         }
 
         return [yamlFolder];

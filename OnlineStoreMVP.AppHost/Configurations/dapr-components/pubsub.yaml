@@ -1,17 +1,17 @@
 apiVersion: dapr.io/v1alpha1
 kind: Component
 metadata:
-  name: "pubsub"
-  namespace: "default"
+  name: pubsub
 spec:
-  type: "pubsub.redis"
-  version: "v1"
+  type: pubsub.redis
+  version: v1
   metadata:
-  - name: "redisHost"
-    value: "127.0.0.1:6379"
-  - name: "enableTLS"
-    value: "false"
-  - name: "consumerID"
-    value: "dapr-consumer"
-  - name: "stream"
-    value: "dapr-pubsub"
+  - name: redisHost
+    value: localhost:6379
+  - name: redisPassword
+    value: ""
+  scopes:
+  - catalogapi
+  - customersapi
+  - ordersapi
+  - paymentsapi

@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
-	<Sdk Name="Aspire.AppHost.Sdk" Version="13.0.1" />
+	<Sdk Name="Aspire.AppHost.Sdk" Version="13.0.2" />
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
@@ -29,6 +29,15 @@
 		<Content Update="Configurations\**\*">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="Configurations\dapr-components\pubsub.yaml">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Configurations\dapr-components\statestore.yaml">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 
 </Project>

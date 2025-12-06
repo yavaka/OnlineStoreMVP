@@ -1,13 +1,19 @@
 apiVersion: dapr.io/v1alpha1
 kind: Component
 metadata:
-  name: "statestore"
-  namespace: "default"
+  name: statestore
 spec:
-  type: "state.redis"
-  version: "v1"
+  type: state.redis
+  version: v1
   metadata:
-  - name: "redisHost"
-    value: "127.0.0.1:6379"
-  - name: "enableTLS"
-    value: "false"
+  - name: redisHost
+    value: localhost:6379
+  - name: redisPassword
+    value: ""
+  - name: actorStateStore
+    value: "true"
+  scopes:
+  - catalogapi
+  - customersapi
+  - ordersapi
+  - paymentsapi
