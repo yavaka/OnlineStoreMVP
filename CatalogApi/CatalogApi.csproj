@@ -16,8 +16,4 @@
     <ProjectReference Include="..\OnlineStoreMVP.ServiceDefaults\OnlineStoreMVP.ServiceDefaults.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Controllers\" />
-  </ItemGroup>
-
 </Project>
