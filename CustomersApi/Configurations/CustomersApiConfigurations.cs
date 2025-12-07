@@ -1,4 +1,5 @@
-﻿using CustomersApi.Models;
+﻿using CustomersApi.Data.Repositories;
+using CustomersApi.Models;
 using CustomersApi.Models.ModelValidations;
 using FluentValidation;
 
@@ -10,7 +11,11 @@ public static class CustomersApiConfigurations
     {
         services.AddControllers();
 
+        // Validators
         services.AddScoped<IValidator<CustomerModel>, CustomerModelValidations>();
+
+        // Data Repositories
+        services.AddScoped<ICustomerRepository, CustomerRepository>();
 
         return services;
     }

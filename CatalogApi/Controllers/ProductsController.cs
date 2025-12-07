@@ -1,4 +1,5 @@
-﻿using CatalogApi.Models;
+﻿using CatalogApi.Data.Repositories;
+using CatalogApi.Models;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using OnlineStoreMVP.ServiceDefaults.Controllers;
@@ -9,60 +10,12 @@ namespace CatalogApi.Controllers;
 [Route("api/[controller]")]
 public class ProductsController(
     ILogger<ProductsController> logger, 
+    IProductRepository productRepository,
     IValidator<ProductModel> validator) : BaseController
 {
     private readonly ILogger<ProductsController> _logger = logger;
     private readonly IValidator<ProductModel> _validator = validator;
-    
-    private static List<ProductModel> _products =
-    [
-        new ProductModel { Id = Guid.NewGuid(), Description = "Product A", Name = "Product A", Price = 10.0m, Stock = 10 },
-        new ProductModel { Id = Guid.NewGuid(), Description = "Product B", Name = "Product B", Price = 20.0m, Stock = 20 },
-        new ProductModel { Id = Guid.NewGuid(), Description = "Product C", Name = "Product C", Price = 30.0m, Stock = 30 }
-    ];
-
-    /// <summary>
-    /// Retrieves the available products.
-    /// </summary>
-    /// <returns>An <see cref="IActionResult"/> containing the list of products. The response has a status code of 200 (OK)
-    /// with the products in the response body.</returns>
-    [HttpGet]
-    public IActionResult GetProducts()
-    {
-        try
-        {
-            return Ok(_products);
-        }
-        catch (Exception ex)
-        {
-            return HandleException(ex, _logger, nameof(GetProducts));
-        }
-    }
-
-    /// <summary>
-    /// Retrieves the product with the specified unique identifier.
-    /// </summary>
-    /// <param name="id">The unique identifier of the product to retrieve.</param>
-    /// <returns>An <see cref="OkObjectResult"/> containing the product if found; otherwise, a <see cref="NotFoundResult"/>
-    /// if no product with the specified identifier exists.</returns>
-    [HttpGet("{id}")]
-    public IActionResult GetProduct(Guid id)
-    {
-        try
-        {
-            // Business logic to get product by id
-            var product = _products.FirstOrDefault(p => p.Id == id);
-            if (product == null)
-            {
-                throw new NotFoundException(nameof(ProductModel), id);
-            }
-            return Ok(product);
-        }
-        catch (Exception ex)
-        {
-            return HandleException(ex, _logger, nameof(GetProduct));
-        }
-    }
+    private readonly IProductRepository _productRepository = productRepository;
 
     /// <summary>
     /// Creates a new product and adds it to the collection.
@@ -73,7 +26,7 @@ public class ProductsController(
     /// <returns>A CreatedAtActionResult containing the newly created product and a location header with the URI of the
     /// created product.</returns>
     [HttpPost]
-    public IActionResult CreateProduct([FromBody] ProductModel product)
+    public async Task<IActionResult> CreateProduct([FromBody] ProductModel product)
     {
         try
         {
@@ -92,10 +45,7 @@ public class ProductsController(
 
             // Business logic
             product.Id = Guid.NewGuid();
-            _products.Add(product);
-
-            // In real implementation, save to database
-            // await _productRepository.AddAsync(product);
+            await _productRepository.AddAsync(product);
 
             return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
         }
@@ -113,13 +63,10 @@ public class ProductsController(
     /// <returns>An HTTP 204 No Content response if the update is successful; otherwise, an HTTP 404 Not Found response if
     /// the product does not exist.</returns>
     [HttpPut("{id}")]
-    public IActionResult UpdateProduct(Guid id, [FromBody] ProductModel updatedProduct)
+    public async Task<IActionResult> UpdateProduct(Guid id, [FromBody] ProductModel updatedProduct)
     {
         try
         {
-            // Find existing product
-            var product = _products.FirstOrDefault(p => p.Id == id) ?? throw new NotFoundException(nameof(ProductModel), id);
-
             // Validate input
             var validationResult = _validator.Validate(updatedProduct);
             if (!validationResult.IsValid)
@@ -133,20 +80,53 @@ public class ProductsController(
                 throw new OnlineStoreMVP.ServiceDefaults.Exceptions.ValidationException(errors);
             }
 
-            // Update product
-            product.Name = updatedProduct.Name;
-            product.Description = updatedProduct.Description;
-            product.Price = updatedProduct.Price;
-            product.Stock = updatedProduct.Stock;
-
-            // In real implementation, update in database
-            // await _productRepository.UpdateAsync(product);
+            var product = await _productRepository.UpdateAsync(id, updatedProduct) ?? throw new NotFoundException(nameof(ProductModel), id);
 
             return NoContent();
         }
         catch (Exception ex)
         {
             return HandleException(ex, _logger, nameof(UpdateProduct));
+        }
+    }
+
+    /// <summary>
+    /// Retrieves the available products.
+    /// </summary>
+    /// <returns>An <see cref="IActionResult"/> containing the list of products. The response has a status code of 200 (OK)
+    /// with the products in the response body.</returns>
+    [HttpGet]
+    public async Task<IActionResult> GetProducts()
+    {
+        try
+        {
+            var products = await _productRepository.GetAllAsync();
+            return Ok(products);
+        }
+        catch (Exception ex)
+        {
+            return HandleException(ex, _logger, nameof(GetProducts));
+        }
+    }
+
+    /// <summary>
+    /// Retrieves the product with the specified unique identifier.
+    /// </summary>
+    /// <param name="id">The unique identifier of the product to retrieve.</param>
+    /// <returns>An <see cref="OkObjectResult"/> containing the product if found; otherwise, a <see cref="NotFoundResult"/>
+    /// if no product with the specified identifier exists.</returns>
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetProduct(Guid id)
+    {
+        try
+        {
+            var product = await _productRepository.GetByIdAsync(id) ?? throw new NotFoundException(nameof(ProductModel), id);
+            
+            return Ok(product);
+        }
+        catch (Exception ex)
+        {
+            return HandleException(ex, _logger, nameof(GetProduct));
         }
     }
 
@@ -158,16 +138,14 @@ public class ProductsController(
     /// cref="NotFoundResult"/> if the product does not exist; otherwise, returns <see cref="NoContentResult"/> on
     /// successful deletion.</returns>
     [HttpDelete("{id}")]
-    public IActionResult DeleteProduct(Guid id)
+    public async Task<IActionResult> DeleteProduct(Guid id)
     {
         try
         {
-            var product = _products.FirstOrDefault(p => p.Id == id) ?? throw new NotFoundException(nameof(ProductModel), id);
-            
-            _products.Remove(product);
-
-            // In real implementation, delete from database
-            // await _productRepository.DeleteAsync(id);
+            if (await _productRepository.DeleteAsync(id) is false)
+            {
+                throw new NotFoundException(nameof(ProductModel), id);
+            }
 
             return NoContent();
         }

@@ -1,4 +1,5 @@
-﻿using CatalogApi.Models;
+﻿using CatalogApi.Data.Repositories;
+using CatalogApi.Models;
 using CatalogApi.Models.ModelValidators;
 using FluentValidation;
 
@@ -10,7 +11,11 @@ public static class CatalogApiConfigurations
     {
         services.AddControllers();
 
+        // Validators
         services.AddScoped<IValidator<ProductModel>, ProductModelValidator>();
+
+        // Data Repositories
+        services.AddScoped<IProductRepository, ProductRepository>();
 
         return services;
     }
