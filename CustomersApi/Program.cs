@@ -1,12 +1,11 @@
+using CustomersApi.Configurations;
 using OnlineStoreMVP.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-// Add services to the container.
-
-builder.Services.AddControllers();
+builder.Services.AddCustomersApiConfigurations(builder.Configuration);
 
 var app = builder.Build();
 

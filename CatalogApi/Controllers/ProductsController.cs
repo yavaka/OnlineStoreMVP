@@ -35,7 +35,7 @@ public class ProductsController(
         }
         catch (Exception ex)
         {
-            return HandleException(ex, _logger, "GetProducts");
+            return HandleException(ex, _logger, nameof(GetProducts));
         }
     }
 
@@ -50,6 +50,7 @@ public class ProductsController(
     {
         try
         {
+            // Business logic to get product by id
             var product = _products.FirstOrDefault(p => p.Id == id);
             if (product == null)
             {
@@ -59,7 +60,7 @@ public class ProductsController(
         }
         catch (Exception ex)
         {
-            return HandleException(ex, _logger, "GetProduct");
+            return HandleException(ex, _logger, nameof(GetProduct));
         }
     }
 
@@ -96,14 +97,11 @@ public class ProductsController(
             // In real implementation, save to database
             // await _productRepository.AddAsync(product);
 
-            return CreatedAtAction(
-                nameof(GetProduct),
-                new { id = product.Id },
-                product);
+            return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
         }
         catch (Exception ex)
         {
-            return HandleException(ex, _logger, "CreateProduct");
+            return HandleException(ex, _logger, nameof(CreateProduct));
         }
     }
 
@@ -120,11 +118,7 @@ public class ProductsController(
         try
         {
             // Find existing product
-            var product = _products.FirstOrDefault(p => p.Id == id);
-            if (product == null)
-            {
-                throw new NotFoundException(nameof(ProductModel), id);
-            }
+            var product = _products.FirstOrDefault(p => p.Id == id) ?? throw new NotFoundException(nameof(ProductModel), id);
 
             // Validate input
             var validationResult = _validator.Validate(updatedProduct);
@@ -152,7 +146,7 @@ public class ProductsController(
         }
         catch (Exception ex)
         {
-            return HandleException(ex, _logger, "UpdateProduct");
+            return HandleException(ex, _logger, nameof(UpdateProduct));
         }
     }
 
@@ -179,7 +173,7 @@ public class ProductsController(
         }
         catch (Exception ex)
         {
-            return HandleException(ex, _logger, "DeleteProduct");
+            return HandleException(ex, _logger, nameof(DeleteProduct));
         }
     }
 }
