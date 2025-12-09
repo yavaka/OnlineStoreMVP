@@ -1,4 +1,4 @@
-﻿namespace OnlineStoreMVP.ServiceDefaults.Exceptions;
+﻿namespace OnlineStoreMVP.ServiceDefaults.Common.Exceptions;
 
 /// <summary>
 /// Represents an exception that is thrown when a request is invalid or cannot be processed due to client-side errors.

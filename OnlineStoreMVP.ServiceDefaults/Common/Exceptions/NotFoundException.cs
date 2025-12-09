@@ -1,4 +1,4 @@
-﻿namespace OnlineStoreMVP.ServiceDefaults.Exceptions;
+﻿namespace OnlineStoreMVP.ServiceDefaults.Common.Exceptions;
 
 /// <summary>
 /// Represents an exception that is thrown when a requested entity or resource cannot be found.

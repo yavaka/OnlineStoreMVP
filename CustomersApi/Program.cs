@@ -1,5 +1,5 @@
 using CustomersApi.Configurations;
-using OnlineStoreMVP.ServiceDefaults;
+using OnlineStoreMVP.ServiceDefaults.Common;
 
 var builder = WebApplication.CreateBuilder(args);
 

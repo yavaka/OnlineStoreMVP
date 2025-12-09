@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using OnlineStoreMVP.ServiceDefaults.Exceptions;
+using OnlineStoreMVP.ServiceDefaults.Common.Exceptions;
 using OnlineStoreMVP.ServiceDefaults.Models;
 using System.Diagnostics;
 

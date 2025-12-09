@@ -1,4 +1,4 @@
-﻿namespace OnlineStoreMVP.ServiceDefaults.Exceptions;
+﻿namespace OnlineStoreMVP.ServiceDefaults.Common.Exceptions;
 
 /// <summary>
 /// Represents an exception that is thrown when one or more validation failures occur.

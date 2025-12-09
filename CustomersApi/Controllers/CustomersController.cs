@@ -3,8 +3,9 @@ using CustomersApi.Models;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using OnlineStoreMVP.ServiceDefaults.Controllers;
-using OnlineStoreMVP.ServiceDefaults.Exceptions;
+using ValidationException = OnlineStoreMVP.ServiceDefaults.Common.Exceptions.ValidationException;
 using System.Threading.Tasks;
+using OnlineStoreMVP.ServiceDefaults.Common.Exceptions;
 
 namespace CustomersApi.Controllers;
 
@@ -40,7 +41,7 @@ public class CustomersController(
                         g => g.Key,
                         g => g.Select(e => e.ErrorMessage).ToArray()
                     );
-                throw new OnlineStoreMVP.ServiceDefaults.Exceptions.ValidationException(errors);
+                throw new ValidationException(errors);
             }
 
             // business logic to add customer
@@ -75,7 +76,7 @@ public class CustomersController(
                         g => g.Key,
                         g => g.Select(e => e.ErrorMessage).ToArray()
                     );
-                throw new OnlineStoreMVP.ServiceDefaults.Exceptions.ValidationException(errors);
+                throw new ValidationException(errors);
             }
 
             var customer = await _customerRepository.UpdateAsync(id, updatedCustomer) ?? throw new NotFoundException(nameof(CustomerModel), id);

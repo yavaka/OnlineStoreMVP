@@ -2,8 +2,9 @@
 using CatalogApi.Models;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using ValidationException = OnlineStoreMVP.ServiceDefaults.Common.Exceptions.ValidationException;
 using OnlineStoreMVP.ServiceDefaults.Controllers;
-using OnlineStoreMVP.ServiceDefaults.Exceptions;
+using OnlineStoreMVP.ServiceDefaults.Common.Exceptions;
 
 namespace CatalogApi.Controllers;
 
@@ -40,7 +41,7 @@ public class ProductsController(
                         g => g.Key,
                         g => g.Select(e => e.ErrorMessage).ToArray()
                     );
-                throw new OnlineStoreMVP.ServiceDefaults.Exceptions.ValidationException(errors);
+                throw new ValidationException(errors);
             }
 
             // Business logic
@@ -76,7 +77,7 @@ public class ProductsController(
                         g => g.Key,
                         g => g.Select(e => e.ErrorMessage).ToArray()
                     );
-                throw new OnlineStoreMVP.ServiceDefaults.Exceptions.ValidationException(errors);
+                throw new ValidationException(errors);
             }
 
             var product = await _productRepository.UpdateAsync(id, updatedProduct) ?? throw new NotFoundException(nameof(ProductModel), id);

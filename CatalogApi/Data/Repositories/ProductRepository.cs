@@ -1,4 +1,5 @@
 ﻿using CatalogApi.Models;
+using OnlineStoreMVP.ServiceDefaults.Common.Exceptions;
 
 namespace CatalogApi.Data.Repositories;
 
@@ -20,7 +21,7 @@ public class ProductRepository : IProductRepository
     public async Task<ProductModel?> UpdateAsync(Guid id, ProductModel product)
     {
         var existingProduct = await GetByIdAsync(id);
-        if (existingProduct == null)
+        if (existingProduct is null)
         {
             return null;
         }
