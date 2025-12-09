@@ -13,6 +13,7 @@ public class CustomerRepository : ICustomerRepository
 
     public Task<CustomerModel> AddAsync(CustomerModel customer)
     {
+        customer.Id = Guid.NewGuid();
         _customers.Add(customer);
         return Task.FromResult(customer);
     }

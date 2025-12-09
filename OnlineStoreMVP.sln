@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.0.11222.15 d18.0
+VisualStudioVersion = 18.0.11222.15
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnlineStoreMVP.AppHost", "OnlineStoreMVP.AppHost\OnlineStoreMVP.AppHost.csproj", "{D9F0DE42-1762-4D78-B058-D5528589B32B}"
 EndProject
@@ -24,6 +24,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{B8D7AD2B-D
 	ProjectSection(SolutionItems) = preProject
 		Environment Prerequisites Setup.md = Environment Prerequisites Setup.md
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CatalogApi.Tests", "CatalogApi.Tests\CatalogApi.Tests.csproj", "{F336DA6F-248E-4326-BB3B-8F35B87FEE48}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomersApi.Tests", "CustomersApi.Tests\CustomersApi.Tests.csproj", "{CCB65F46-7561-424D-AD40-FF7C2DF4FF34}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnlineStoreMVP.TestUtilities", "OnlineStoreMVP.TestUtilities\OnlineStoreMVP.TestUtilities.csproj", "{C01ADE9E-87AA-403C-BFC6-069BCB10E1D1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -55,6 +61,18 @@ Global
 		{DB599C31-FBA6-ECA6-EDD5-DFF3C06B8986}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DB599C31-FBA6-ECA6-EDD5-DFF3C06B8986}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DB599C31-FBA6-ECA6-EDD5-DFF3C06B8986}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F336DA6F-248E-4326-BB3B-8F35B87FEE48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F336DA6F-248E-4326-BB3B-8F35B87FEE48}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F336DA6F-248E-4326-BB3B-8F35B87FEE48}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F336DA6F-248E-4326-BB3B-8F35B87FEE48}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CCB65F46-7561-424D-AD40-FF7C2DF4FF34}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CCB65F46-7561-424D-AD40-FF7C2DF4FF34}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CCB65F46-7561-424D-AD40-FF7C2DF4FF34}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CCB65F46-7561-424D-AD40-FF7C2DF4FF34}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C01ADE9E-87AA-403C-BFC6-069BCB10E1D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C01ADE9E-87AA-403C-BFC6-069BCB10E1D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C01ADE9E-87AA-403C-BFC6-069BCB10E1D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C01ADE9E-87AA-403C-BFC6-069BCB10E1D1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -66,6 +84,9 @@ Global
 		{E183E672-FBDF-F964-514C-598E6FF65128} = {0EBF14AE-B6BA-446D-8714-71194438CC9D}
 		{0DFDD4DD-4044-39C9-7433-6A39FF38EE2B} = {0EBF14AE-B6BA-446D-8714-71194438CC9D}
 		{DB599C31-FBA6-ECA6-EDD5-DFF3C06B8986} = {0EBF14AE-B6BA-446D-8714-71194438CC9D}
+		{F336DA6F-248E-4326-BB3B-8F35B87FEE48} = {AAEB6C2D-BC1F-4878-A552-346C79B52A63}
+		{CCB65F46-7561-424D-AD40-FF7C2DF4FF34} = {AAEB6C2D-BC1F-4878-A552-346C79B52A63}
+		{C01ADE9E-87AA-403C-BFC6-069BCB10E1D1} = {AAEB6C2D-BC1F-4878-A552-346C79B52A63}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7C31FDC7-5759-4165-9D5C-BDD1FF5502BA}

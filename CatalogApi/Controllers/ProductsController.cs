@@ -44,10 +44,9 @@ public class ProductsController(
             }
 
             // Business logic
-            product.Id = Guid.NewGuid();
-            await _productRepository.AddAsync(product);
+            var createdProduct = await _productRepository.AddAsync(product);
 
-            return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
+            return CreatedAtAction(nameof(GetProduct), new { id = createdProduct.Id }, createdProduct);
         }
         catch (Exception ex)
         {

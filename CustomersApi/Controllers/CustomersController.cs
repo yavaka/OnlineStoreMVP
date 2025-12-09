@@ -44,10 +44,9 @@ public class CustomersController(
             }
 
             // business logic to add customer
-            customer.Id = Guid.NewGuid();
-            await _customerRepository.AddAsync(customer);
+            var createdCustomer = await _customerRepository.AddAsync(customer);
 
-            return CreatedAtAction(nameof(GetCustomer), new { id = customer.Id }, customer);
+            return CreatedAtAction(nameof(GetCustomer), new { id = createdCustomer.Id }, createdCustomer);
         }
         catch (Exception ex)
         {

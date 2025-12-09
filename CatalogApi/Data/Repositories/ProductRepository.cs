@@ -12,6 +12,7 @@ public class ProductRepository : IProductRepository
 
     public Task<ProductModel> AddAsync(ProductModel product)
     {
+        product.Id = Guid.NewGuid();
         _products.Add(product);
         return Task.FromResult(product);
     }
