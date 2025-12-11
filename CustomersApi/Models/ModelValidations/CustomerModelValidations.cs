@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+﻿using CustomersApi.Common;
+using FluentValidation;
 
 namespace CustomersApi.Models.ModelValidations;
 
@@ -7,15 +8,15 @@ public class CustomerModelValidations : AbstractValidator<CustomerModel>
     public CustomerModelValidations()
     {
         RuleFor(c => c.Name)
-            .NotEmpty().WithMessage("Name is required.")
-            .MaximumLength(100).WithMessage("Name must not exceed 100 characters.");
+            .NotEmpty().WithMessage(Constants.CustomerNameRequired)
+            .MaximumLength(Constants.CustomerNameMaxLength).WithMessage(Constants.CustomerNameTooLong);
 
         RuleFor(c => c.Email)
-            .NotEmpty().WithMessage("Email is required.")
-            .EmailAddress().WithMessage("Invalid email format.");
+            .NotEmpty().WithMessage(Constants.CustomerEmailRequired)
+            .EmailAddress().WithMessage(Constants.CustomerEmailInvalid);
 
         RuleFor(c => c.Address)
-            .NotEmpty().WithMessage("Address is required.")
-            .MaximumLength(200).WithMessage("Address must not exceed 200 characters.");
+            .NotEmpty().WithMessage(Constants.CustomerAddressRequired)
+            .MaximumLength(Constants.CustomerAddressMaxLength).WithMessage(Constants.CustomerAddressTooLong);
     }
 }

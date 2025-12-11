@@ -5,10 +5,7 @@ using CatalogApi.Models;
 using CatalogApi.Tests.Helpers;
 using FluentAssertions;
 using FluentValidation;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using OnlineStoreMVP.ServiceDefaults.Models;
@@ -18,119 +15,69 @@ namespace CatalogApi.Tests.Controllers;
 
 public class ProductsControllerTests
 {
-    private readonly Mock<ILogger<ProductsController>> _mockLogger;
-    private readonly Mock<IValidator<ProductModel>> _mockValidator;
-    private readonly Mock<IProductRepository> _mockRepository;
+    private readonly Mock<ILogger<ProductsController>> _mockLogger = MockHelpers.CreateMockLogger<ProductsController>();
+    private readonly Mock<IValidator<ProductModel>> _mockValidator = ValidationHelpers.CreateValidValidator<ProductModel>();
+    private readonly Mock<IProductRepository> _mockRepository = new();
     private readonly ProductsController _controller;
 
     public ProductsControllerTests()
     {
-        _mockLogger = MockHelpers.CreateMockLogger<ProductsController>();
-        _mockValidator = ValidationHelpers.CreateValidValidator<ProductModel>();
-        _mockRepository = new Mock<IProductRepository>();
-        _controller = new ProductsController(
+        _controller = new(
             _mockLogger.Object,
             _mockRepository.Object,
             _mockValidator.Object);
 
-        // Set up HttpContext for the controller
-        SetupHttpContext(_controller);
-    }
-
-    /// <summary>
-    /// Sets up a mock HttpContext with a TraceIdentifier for the controller.
-    /// </summary>
-    private static void SetupHttpContext(ControllerBase controller)
-    {
-        var services = new ServiceCollection()
-        .AddSingleton<IWebHostEnvironment>(Mock.Of<IWebHostEnvironment>())
-        .BuildServiceProvider();
-
-        controller.ControllerContext = new ControllerContext
-        {
-            HttpContext = new DefaultHttpContext
-            {
-                TraceIdentifier = Guid.NewGuid().ToString(),
-                RequestServices = services
-            }
-        };
+        ControllerHelpers.SetupHttpContext(_controller);
     }
 
     public class CreateProductTests : ProductsControllerTests
     {
-        /// <summary>
-        /// Verifies that creating a product with valid data returns a 201 Created response and the correct product
-        /// information.
-        /// </summary>
-        /// <remarks>This test ensures that the CreateProduct action of the ProductsController returns a
-        /// CreatedAtActionResult with status code 201 when provided with a valid product. It also verifies that the
-        /// returned product matches the input and that the repository and validator are called as expected.</remarks>
-        /// <returns>A completed task representing the asynchronous test execution.</returns>
         [Fact]
         public async Task CreateProduct_WithValidProduct_Returns201Created()
         {
             // Arrange
-
-            // Create a valid product to add
             var productToCreate = ProductTestHelpers.CreateTestProduct();
 
-            // Setup the mock repository to return the created product
             _mockRepository.Setup(r => r.AddAsync(It.IsAny<ProductModel>()))
-                           .ReturnsAsync((ProductModel p) => p); // Return the product that was passed in
+                           .ReturnsAsync((ProductModel p) => p);
 
             // Act
-
-            // Call the CreateProduct method
             var result = await _controller.CreateProduct(productToCreate);
 
             // Assert
-
             var createdAtResult = result.Should().BeOfType<CreatedAtActionResult>().Subject;
             createdAtResult.StatusCode.Should().Be(201);
-            createdAtResult.ActionName.Should().Be(nameof(ProductsController.GetProduct));
+            createdAtResult.ActionName.Should().Be(nameof(ProductsController.CreateProduct));
 
             var returnedProduct = createdAtResult.Value.Should().BeOfType<ProductModel>().Subject;
             returnedProduct.Name.Should().Be(productToCreate.Name);
             returnedProduct.Description.Should().Be(productToCreate.Description);
             returnedProduct.Price.Should().Be(productToCreate.Price);
             returnedProduct.Stock.Should().Be(productToCreate.Stock);
-            returnedProduct.Id.Should().NotBeEmpty();
 
             // Verify that a new Guid was generated (ID should not be empty)
             returnedProduct.Id.Should().NotBeEmpty();
             returnedProduct.Id.Should().NotBe(Guid.Empty);
 
-            // Verify repository was called with the product
             _mockRepository.Verify(
                 r => r.AddAsync(It.IsAny<ProductModel>()),
                 Times.Once);
 
-            // Verify validator was called
             _mockValidator.Verify(
                 v => v.Validate(It.Is<ProductModel>(p => p == productToCreate)),
                 Times.Once);
         }
 
-        /// <summary>
-        /// Verifies that creating a product with an empty identifier results in a new GUID being generated by the
-        /// repository.
-        /// </summary>
-        /// <remarks>This test ensures that when a product is created with an empty <see cref="Guid"/> as
-        /// its identifier, the repository assigns a new, non-empty GUID to the product. It also verifies that the
-        /// repository and validator are called as expected during the creation process.</remarks>
-        /// <returns>A task that represents the asynchronous test operation.</returns>
         [Fact]
         public async Task CreateProduct_WhenIdIsEmpty_GeneratesNewGuid()
         {
             // Arrange
             var productToCreate = ProductTestHelpers.CreateTestProduct(id: Guid.Empty);
 
-            // Mock repository to simulate Guid generation (as the real repository does)
             var generatedId = Guid.NewGuid();
             _mockRepository.Setup(r => r.AddAsync(It.IsAny<ProductModel>()))
                 .ReturnsAsync((ProductModel p) =>
                 {
-                    // Simulate what the real repository does: generate ID and return product
                     p.Id = generatedId;
                     return p;
                 });
@@ -139,45 +86,30 @@ public class ProductsControllerTests
             var result = await _controller.CreateProduct(productToCreate);
 
             // Assert
-            result.Should().BeOfType<CreatedAtActionResult>();
-
             var createdAtResult = result.Should().BeOfType<CreatedAtActionResult>().Subject;
             createdAtResult.StatusCode.Should().Be(201);
 
             var createdProduct = createdAtResult.Value.Should().BeOfType<ProductModel>().Subject;
 
-            // Verify that a new Guid was generated by the repository
             createdProduct.Id.Should().NotBeEmpty();
             createdProduct.Id.Should().NotBe(Guid.Empty);
-            createdProduct.Id.Should().Be(generatedId); // Verify it matches what repository generated
+            createdProduct.Id.Should().Be(generatedId);
 
-            // Verify repository was called (which generates the ID)
             _mockRepository.Verify(
                 r => r.AddAsync(It.IsAny<ProductModel>()),
                 Times.Once);
 
-            // Verify validator was called
             _mockValidator.Verify(
                 v => v.Validate(It.IsAny<ProductModel>()),
                 Times.Once);
         }
 
-        /// <summary>
-        /// Verifies that creating a product with invalid data results in a 400 Bad Request response containing
-        /// validation errors.
-        /// </summary>
-        /// <remarks>This test ensures that when the product model fails validation, the controller
-        /// returns a BadRequestObjectResult with detailed error information and does not attempt to add the product to
-        /// the repository.</remarks>
-        /// <returns>A task that represents the asynchronous test operation.</returns>
         [Fact]
         public async Task CreateProduct_WithInvalidProduct_Returns400BadRequest()
         {
             // Arrange
-            // Create an invalid product
             var invalidProduct = ProductTestHelpers.CreateInvalidProduct();
 
-            // Setup the mock validator to return validation errors
             var mockInvalidValidator = ValidationHelpers.CreateInvalidValidator<ProductModel>(new Dictionary<string, string[]>
             {
                 { nameof(ProductModel.Name), new string[] { Constants.ProductNameRequired } },
@@ -186,50 +118,125 @@ public class ProductsControllerTests
                 { nameof(ProductModel.Price), new[] { Constants.ProductPriceMustBeGreaterThanZero } }
             });
 
-            // Create controller with the invalid validator
             var controller = new ProductsController(
                 _mockLogger.Object,
                 _mockRepository.Object,
-                mockInvalidValidator.Object); // Use the invalid validator here!
+                mockInvalidValidator.Object);
 
-            SetupHttpContext(controller);
+            ControllerHelpers.SetupHttpContext(controller);
 
             // Act
-            // Call the CreateProduct method
             var result = await controller.CreateProduct(invalidProduct);
 
             // Assert
-
-            // Assert that the result is BadRequestObjectResult
-            result.Should().BeOfType<BadRequestObjectResult>();
-
             var badRequestResult = result.Should().BeOfType<BadRequestObjectResult>().Subject;
             badRequestResult.StatusCode.Should().Be(400);
 
-            // Assert that the returned value contains validation errors
-            badRequestResult.Value.Should().BeOfType<ErrorResponse>();
             var errorResponse = badRequestResult.Value.Should().BeOfType<ErrorResponse>().Subject;
             errorResponse.Errors.Should().NotBeNull();
 
-            // Verify validation errors are present
+            // Name
             errorResponse.Errors.Should().ContainKey(nameof(ProductModel.Name));
             errorResponse.Errors[nameof(ProductModel.Name)].Should().Contain(Constants.ProductNameRequired);
 
+            // Description
             errorResponse.Errors.Should().ContainKey(nameof(ProductModel.Description));
             errorResponse.Errors[nameof(ProductModel.Description)].Should().Contain(Constants.ProductDescriptionRequired);
 
+            // Stock
             errorResponse.Errors.Should().ContainKey(nameof(ProductModel.Stock));
             errorResponse.Errors[nameof(ProductModel.Stock)].Should().Contain(Constants.ProductStockMustBeNonNegative);
 
+            // Price
             errorResponse.Errors.Should().ContainKey(nameof(ProductModel.Price));
             errorResponse.Errors[nameof(ProductModel.Price)].Should().Contain(Constants.ProductPriceMustBeGreaterThanZero);
 
-            // Verify repository.AddAsync was never called
             _mockRepository.Verify(
                 r => r.AddAsync(It.IsAny<ProductModel>()),
                 Times.Never);
 
-            // Verify validator was called
+            mockInvalidValidator.Verify(
+                v => v.Validate(It.Is<ProductModel>(p => p == invalidProduct)),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task CreateProduct_WithNameExceedingMaxLength_Returns400BadRequest()
+        {
+            // Arrange
+            var invalidProduct = ProductTestHelpers.CreateTestProduct();
+            invalidProduct.Name = new string('A', Constants.ProductNameMaxLength + 1);
+
+            var mockInvalidValidator = ValidationHelpers.CreateInvalidValidator<ProductModel>(new Dictionary<string, string[]>
+            {
+                { nameof(ProductModel.Name), new string[] { Constants.ProductNameTooLong } }
+            });
+
+            var controller = new ProductsController(
+                _mockLogger.Object,
+                _mockRepository.Object,
+                mockInvalidValidator.Object);
+
+            ControllerHelpers.SetupHttpContext(controller);
+
+            // Act
+            var result = await controller.CreateProduct(invalidProduct);
+
+            // Assert
+            var badRequestResult = result.Should().BeOfType<BadRequestObjectResult>().Subject;
+            badRequestResult.StatusCode.Should().Be(400);
+
+            var errorResponse = badRequestResult.Value.Should().BeOfType<ErrorResponse>().Subject;
+            errorResponse.Errors.Should().NotBeNull();
+
+            errorResponse.Errors.Should().ContainKey(nameof(ProductModel.Name));
+            errorResponse.Errors[nameof(ProductModel.Name)].Should().Contain(Constants.ProductNameTooLong);
+
+            _mockRepository.Verify(
+                r => r.AddAsync(It.IsAny<ProductModel>()),
+                Times.Never);
+
+            mockInvalidValidator.Verify(
+                v => v.Validate(It.Is<ProductModel>(p => p == invalidProduct)),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task CreateProduct_WithDescriptionExceedingMaxLength_Returns400BadRequest()
+        {
+            // Arrange
+            var invalidProduct = ProductTestHelpers.CreateTestProduct();
+            invalidProduct.Description = new string('A', Constants.ProductDescriptionMaxLength + 1);
+
+            var mockInvalidValidator = ValidationHelpers.CreateInvalidValidator<ProductModel>(new Dictionary<string, string[]>
+            {
+                { nameof(ProductModel.Description), new string[] { Constants.ProductDescriptionTooLong } }
+            });
+
+            var controller = new ProductsController(
+                _mockLogger.Object,
+                _mockRepository.Object,
+                mockInvalidValidator.Object);
+
+            ControllerHelpers.SetupHttpContext(controller);
+
+            // Act
+            var result = await controller.CreateProduct(invalidProduct);
+
+            // Assert
+            var badRequestResult = result.Should().BeOfType<BadRequestObjectResult>().Subject;
+            badRequestResult.StatusCode.Should().Be(400);
+
+            var errorResponse = badRequestResult.Value.Should().BeOfType<ErrorResponse>().Subject;
+            errorResponse.Errors.Should().NotBeNull();
+
+            errorResponse.Errors.Should().ContainKey(nameof(ProductModel.Description));
+            errorResponse.Errors[nameof(ProductModel.Description)].Should().Contain(Constants.ProductDescriptionTooLong);
+
+            _mockRepository.Verify(
+                r => r.AddAsync(It.IsAny<ProductModel>()),
+                Times.Never);
+
             mockInvalidValidator.Verify(
                 v => v.Validate(It.Is<ProductModel>(p => p == invalidProduct)),
                 Times.Once);
@@ -250,6 +257,10 @@ public class ProductsControllerTests
             var objectResult = result.Should().BeOfType<ObjectResult>().Subject;
             objectResult.StatusCode.Should().Be(500);
             objectResult.Value.Should().BeOfType<ErrorResponse>();
+
+            _mockRepository.Verify(
+                r => r.AddAsync(It.IsAny<ProductModel>()),
+                Times.Once);
         }
     }
 
@@ -259,12 +270,9 @@ public class ProductsControllerTests
         public async Task UpdateProduct_WithValidProduct_Returns204NoContent()
         {
             // Arrange
-
-            // Create a valid existing product
             var existingProductId = Guid.NewGuid();
             var updatedProduct = ProductTestHelpers.CreateTestProduct(existingProductId);
 
-            // Setup the mock repository to return the updated product
             _mockRepository.Setup(r => r.UpdateAsync(existingProductId, It.IsAny<ProductModel>()))
                            .ReturnsAsync(updatedProduct);
 
@@ -272,16 +280,13 @@ public class ProductsControllerTests
             var result = await _controller.UpdateProduct(existingProductId, updatedProduct);
 
             // Assert
-            result.Should().BeOfType<NoContentResult>();
-            var noContentResult = result as NoContentResult;
+            var noContentResult = result.Should().BeOfType<NoContentResult>().Subject;
             noContentResult!.StatusCode.Should().Be(204);
 
-            // Verify repository was called with correct parameters
             _mockRepository.Verify(
                 r => r.UpdateAsync(existingProductId, It.Is<ProductModel>(p => p == updatedProduct)),
                 Times.Once);
 
-            // Verify validator was called
             _mockValidator.Verify(
                 v => v.Validate(It.Is<ProductModel>(p => p == updatedProduct)),
                 Times.Once);
@@ -292,7 +297,7 @@ public class ProductsControllerTests
         {
             // Arrange
             var nonExistentProductId = Guid.NewGuid();
-            var updatedProduct = ProductTestHelpers.CreateTestProduct(); 
+            var updatedProduct = ProductTestHelpers.CreateTestProduct();
 
             _mockRepository.Setup(r => r.UpdateAsync(nonExistentProductId, It.IsAny<ProductModel>()))
                            .ReturnsAsync((ProductModel?)null);
@@ -304,12 +309,10 @@ public class ProductsControllerTests
             var notFoundResult = result.Should().BeOfType<NotFoundObjectResult>().Subject;
             notFoundResult.StatusCode.Should().Be(404);
 
-            // Verify interactions
             _mockRepository.Verify(
                 r => r.UpdateAsync(nonExistentProductId, It.IsAny<ProductModel>()),
                 Times.Once);
 
-            // Verify validator was called
             _mockValidator.Verify(
                 v => v.Validate(It.Is<ProductModel>(p => p == updatedProduct)),
                 Times.Once);
@@ -321,7 +324,7 @@ public class ProductsControllerTests
             // Arrange
             var existingProductId = Guid.NewGuid();
             var invalidProduct = ProductTestHelpers.CreateInvalidProduct();
-            // Setup the mock validator to return validation errors
+
             var mockInvalidValidator = ValidationHelpers.CreateInvalidValidator<ProductModel>(new Dictionary<string, string[]>
             {
                 { nameof(ProductModel.Name), new string[] { Constants.ProductNameRequired } },
@@ -330,47 +333,42 @@ public class ProductsControllerTests
                 { nameof(ProductModel.Price), new[] { Constants.ProductPriceMustBeGreaterThanZero } }
             });
 
-            // Create controller with the invalid validator
             var controller = new ProductsController(
                 _mockLogger.Object,
                 _mockRepository.Object,
-                mockInvalidValidator.Object); // Use the invalid validator here!
-            SetupHttpContext(controller);
+                mockInvalidValidator.Object);
+            ControllerHelpers.SetupHttpContext(controller);
 
             // Act
             var result = await controller.UpdateProduct(existingProductId, invalidProduct);
 
             // Assert
-
-            // Assert that the result is BadRequestObjectResult
-            result.Should().BeOfType<BadRequestObjectResult>();
-
             var badRequestResult = result.Should().BeOfType<BadRequestObjectResult>().Subject;
             badRequestResult.StatusCode.Should().Be(400);
 
-            // Assert that the returned value contains validation errors
-            badRequestResult.Value.Should().BeOfType<ErrorResponse>();
             var errorResponse = badRequestResult.Value.Should().BeOfType<ErrorResponse>().Subject;
             errorResponse.Errors.Should().NotBeNull();
 
-            // Verify validation errors are present
+            // Name
             errorResponse.Errors.Should().ContainKey(nameof(ProductModel.Name));
             errorResponse.Errors[nameof(ProductModel.Name)].Should().Contain(Constants.ProductNameRequired);
 
+            // Description
             errorResponse.Errors.Should().ContainKey(nameof(ProductModel.Description));
             errorResponse.Errors[nameof(ProductModel.Description)].Should().Contain(Constants.ProductDescriptionRequired);
 
+            // Stock
             errorResponse.Errors.Should().ContainKey(nameof(ProductModel.Stock));
             errorResponse.Errors[nameof(ProductModel.Stock)].Should().Contain(Constants.ProductStockMustBeNonNegative);
 
+            // Price
             errorResponse.Errors.Should().ContainKey(nameof(ProductModel.Price));
             errorResponse.Errors[nameof(ProductModel.Price)].Should().Contain(Constants.ProductPriceMustBeGreaterThanZero);
 
-            // Verify repository.UpdateAsync was never called
             _mockRepository.Verify(
                 r => r.UpdateAsync(It.IsAny<Guid>(), It.IsAny<ProductModel>()),
                 Times.Never);
-            // Verify validator was called
+
             mockInvalidValidator.Verify(
                 v => v.Validate(It.Is<ProductModel>(p => p == invalidProduct)),
                 Times.Once);
@@ -382,6 +380,7 @@ public class ProductsControllerTests
             // Arrange
             var productId = Guid.NewGuid();
             var updatedProduct = ProductTestHelpers.CreateTestProduct();
+
             _mockRepository.Setup(r => r.UpdateAsync(productId, It.IsAny<ProductModel>()))
                            .ThrowsAsync(new Exception("Database error"));
 
@@ -391,6 +390,11 @@ public class ProductsControllerTests
             // Assert
             var objectResult = result.Should().BeOfType<ObjectResult>().Subject;
             objectResult.StatusCode.Should().Be(500);
+            objectResult.Value.Should().BeOfType<ErrorResponse>();
+
+            _mockRepository.Verify(
+                r => r.UpdateAsync(productId, It.IsAny<ProductModel>()),
+                Times.Once);
         }
     }
 
@@ -409,12 +413,10 @@ public class ProductsControllerTests
             var result = await _controller.GetProducts();
 
             // Assert
-            result.Should().BeOfType<OkObjectResult>();
-            var okResult = result as OkObjectResult;
+            var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
             okResult!.StatusCode.Should().Be(200);
             okResult.Value.Should().BeEquivalentTo(products);
 
-            // Verify repository was called
             _mockRepository.Verify(
                 r => r.GetAllAsync(),
                 Times.Once);
@@ -425,28 +427,25 @@ public class ProductsControllerTests
         {
             // Arrange
             var emptyProducts = new List<ProductModel>();
+
             _mockRepository.Setup(r => r.GetAllAsync())
                            .ReturnsAsync(emptyProducts);
 
-
-
             // Act
             var result = await _controller.GetProducts();
 
             // Assert
-            result.Should().BeOfType<OkObjectResult>();
-            var okResult = result as OkObjectResult;
+            var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
             okResult!.StatusCode.Should().Be(200);
             okResult.Value.Should().BeEquivalentTo(emptyProducts);
 
-            // Verify repository was called
             _mockRepository.Verify(
                 r => r.GetAllAsync(),
                 Times.Once);
         }
 
         [Fact]
-        public async Task GetProducts_OnException_Returns500InternalServerError()
+        public async Task GetProducts_WhenRepositoryThrowsException_Returns500InternalServerError()
         {
             // Arrange
             _mockRepository.Setup(r => r.GetAllAsync())
@@ -454,43 +453,20 @@ public class ProductsControllerTests
 
             // Act
             var result = await _controller.GetProducts();
-
-            // Assert
-            result.Should().BeOfType<ObjectResult>();
-            var objectResult = result as ObjectResult;
-            objectResult!.StatusCode.Should().Be(500);
-
-            // Verify repository was called
-            _mockRepository.Verify(
-                r => r.GetAllAsync(),
-                Times.Once);
-        }
-
-        [Fact]
-        public async Task GetProduct_WhenRepositoryThrowsException_Returns500InternalServerError()
-        {
-            // Arrange
-            var productId = Guid.NewGuid();
-            _mockRepository.Setup(r => r.GetByIdAsync(productId))
-                           .ThrowsAsync(new Exception("Database error"));
-
-            // Act
-            var result = await _controller.GetProduct(productId);
 
             // Assert
             var objectResult = result.Should().BeOfType<ObjectResult>().Subject;
             objectResult.StatusCode.Should().Be(500);
+            objectResult.Value.Should().BeOfType<ErrorResponse>();
+
+            _mockRepository.Verify(
+                r => r.GetAllAsync(),
+                Times.Once);
         }
     }
 
     public class GetProductByIdTests : ProductsControllerTests
     {
-        /*
-            - ✅ Returns 200 OK with product when found
-            - ✅ Returns 404 NotFound when product doesn't exist (repository returns null)
-            - ✅ Handles exceptions correctly
-        */
-
         [Fact]
         public async Task GetProduct_WithValidId_Returns200OkWithProduct()
         {
@@ -504,12 +480,10 @@ public class ProductsControllerTests
             var result = await _controller.GetProduct(productId);
 
             // Assert
-            result.Should().BeOfType<OkObjectResult>();
-            var okResult = result as OkObjectResult;
+            var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
             okResult!.StatusCode.Should().Be(200);
             okResult.Value.Should().BeEquivalentTo(product);
 
-            // Verify repository was called
             _mockRepository.Verify(
                 r => r.GetByIdAsync(productId),
                 Times.Once);
@@ -527,13 +501,32 @@ public class ProductsControllerTests
             var result = await _controller.GetProduct(nonExistentProductId);
 
             // Assert
-            result.Should().BeOfType<NotFoundObjectResult>();
-            var notFoundResult = result as NotFoundObjectResult;
+            var notFoundResult = result.Should().BeOfType<NotFoundObjectResult>().Subject;
             notFoundResult!.StatusCode.Should().Be(404);
 
-            // Verify repository was called
             _mockRepository.Verify(
                 r => r.GetByIdAsync(nonExistentProductId),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task GetProduct_WhenRepositoryThrowsException_Returns500InternalServerError()
+        {
+            // Arrange
+            var productId = Guid.NewGuid();
+            _mockRepository.Setup(r => r.GetByIdAsync(productId))
+                           .ThrowsAsync(new Exception("Database error"));
+
+            // Act
+            var result = await _controller.GetProduct(productId);
+
+            // Assert
+            var objectResult = result.Should().BeOfType<ObjectResult>().Subject;
+            objectResult!.StatusCode.Should().Be(500);
+            objectResult.Value.Should().BeOfType<ErrorResponse>();
+
+            _mockRepository.Verify(
+                r => r.GetByIdAsync(productId),
                 Times.Once);
         }
     }
@@ -552,11 +545,9 @@ public class ProductsControllerTests
             var result = await _controller.DeleteProduct(existingProductId);
 
             // Assert
-            result.Should().BeOfType<NoContentResult>();
-            var noContentResult = result as NoContentResult;
+            var noContentResult = result.Should().BeOfType<NoContentResult>().Subject;
             noContentResult!.StatusCode.Should().Be(204);
 
-            // Verify repository was called
             _mockRepository.Verify(
                 r => r.DeleteAsync(existingProductId),
                 Times.Once);
@@ -569,22 +560,21 @@ public class ProductsControllerTests
             var nonExistentProductId = Guid.NewGuid();
             _mockRepository.Setup(r => r.DeleteAsync(nonExistentProductId))
                            .ReturnsAsync(false);
+
             // Act
             var result = await _controller.DeleteProduct(nonExistentProductId);
 
             // Assert
-            result.Should().BeOfType<NotFoundObjectResult>();
-            var notFoundResult = result as NotFoundObjectResult;
+            var notFoundResult = result.Should().BeOfType<NotFoundObjectResult>().Subject;
             notFoundResult!.StatusCode.Should().Be(404);
 
-            // Verify repository was called
             _mockRepository.Verify(
                 r => r.DeleteAsync(nonExistentProductId),
                 Times.Once);
         }
 
         [Fact]
-        public async Task DeleteProduct_OnException_Returns500InternalServerError()
+        public async Task DeleteProduct_WhenRepositoryThrowsException_Returns500InternalServerError()
         {
             // Arrange
             var productId = Guid.NewGuid();
@@ -595,11 +585,10 @@ public class ProductsControllerTests
             var result = await _controller.DeleteProduct(productId);
 
             // Assert
-            result.Should().BeOfType<ObjectResult>();
-            var objectResult = result as ObjectResult;
+            var objectResult = result.Should().BeOfType<ObjectResult>().Subject;
             objectResult!.StatusCode.Should().Be(500);
+            objectResult.Value.Should().BeOfType<ErrorResponse>();
 
-            // Verify repository was called
             _mockRepository.Verify(
                 r => r.DeleteAsync(productId),
                 Times.Once);

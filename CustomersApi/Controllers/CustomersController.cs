@@ -2,16 +2,15 @@
 using CustomersApi.Models;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using OnlineStoreMVP.ServiceDefaults.Common.Exceptions;
 using OnlineStoreMVP.ServiceDefaults.Controllers;
 using ValidationException = OnlineStoreMVP.ServiceDefaults.Common.Exceptions.ValidationException;
-using System.Threading.Tasks;
-using OnlineStoreMVP.ServiceDefaults.Common.Exceptions;
 
 namespace CustomersApi.Controllers;
 
 [Route("api/[controller]")]
 public class CustomersController(
-    ILogger<CustomersController> logger, 
+    ILogger<CustomersController> logger,
     ICustomerRepository customerRepository,
     IValidator<CustomerModel> validator) : BaseController
 {
@@ -27,11 +26,10 @@ public class CustomersController(
     /// created customer if successful, or an error response if validation fails or an exception occurs.
     /// </returns>
     [HttpPost]
-    public async Task<IActionResult> CreateCustomerAsync([FromBody] CustomerModel customer)
+    public async Task<IActionResult> CreateCustomer([FromBody] CustomerModel customer)
     {
         try
         {
-            // Validate the incoming customer data
             var validationResult = _validator.Validate(customer);
             if (!validationResult.IsValid)
             {
@@ -44,14 +42,13 @@ public class CustomersController(
                 throw new ValidationException(errors);
             }
 
-            // business logic to add customer
             var createdCustomer = await _customerRepository.AddAsync(customer);
 
-            return CreatedAtAction(nameof(GetCustomer), new { id = createdCustomer.Id }, createdCustomer);
+            return CreatedAtAction(nameof(CreateCustomer), new { id = createdCustomer.Id }, createdCustomer);
         }
         catch (Exception ex)
         {
-            return HandleException(ex, _logger, nameof(CreateCustomerAsync));
+            return HandleException(ex, _logger, nameof(CreateCustomer));
         }
     }
 
@@ -62,11 +59,10 @@ public class CustomersController(
     /// <param name="updatedCustomer">The updated customer information.</param>
     /// <returns>An <see cref="IActionResult"/> representing the result of the update operation.</returns>
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateCustomerAsync(Guid id, [FromBody] CustomerModel updatedCustomer)
+    public async Task<IActionResult> UpdateCustomer(Guid id, [FromBody] CustomerModel updatedCustomer)
     {
         try
         {
-            // Validate the incoming customer data
             var validationResult = _validator.Validate(updatedCustomer);
             if (!validationResult.IsValid)
             {
@@ -85,7 +81,7 @@ public class CustomersController(
         }
         catch (Exception ex)
         {
-            return HandleException(ex, _logger, nameof(UpdateCustomerAsync));
+            return HandleException(ex, _logger, nameof(UpdateCustomer));
         }
     }
 
@@ -135,9 +131,8 @@ public class CustomersController(
     {
         try
         {
-            // business logic to find existing customer
-            return await _customerRepository.DeleteAsync(id) 
-                ? NoContent() 
+            return await _customerRepository.DeleteAsync(id)
+                ? NoContent()
                 : throw new NotFoundException(nameof(CustomerModel), id);
         }
         catch (Exception ex)
