@@ -8,6 +8,16 @@ using OnlineStoreMVP.ServiceDefaults.Common.Exceptions;
 
 namespace CatalogApi.Controllers;
 
+/// <summary>
+/// API controller that provides endpoints for managing products, including creating, retrieving, updating, and deleting
+/// product records.
+/// </summary>
+/// <remarks>All endpoints require valid product data and handle common error scenarios, such as not found or
+/// validation failures, by returning appropriate HTTP status codes. The controller is intended to be used as part of an
+/// ASP.NET Core Web API and follows RESTful conventions for resource management.</remarks>
+/// <param name="logger">The logger used to record diagnostic and operational information for the controller. Cannot be null.</param>
+/// <param name="productRepository">The repository used to access and manage product data. Cannot be null.</param>
+/// <param name="validator">The validator used to ensure product models meet required validation rules. Cannot be null.</param>
 [Route("api/[controller]")]
 public class ProductsController(
     ILogger<ProductsController> logger, 

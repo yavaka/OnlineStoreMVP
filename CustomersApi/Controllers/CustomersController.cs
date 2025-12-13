@@ -8,6 +8,15 @@ using ValidationException = OnlineStoreMVP.ServiceDefaults.Common.Exceptions.Val
 
 namespace CustomersApi.Controllers;
 
+/// <summary>
+/// API controller that manages customer records, providing endpoints to create, retrieve, update, and delete customers.
+/// </summary>
+/// <remarks>All endpoints in this controller require valid customer data and handle common error scenarios, such
+/// as validation failures or missing records, by returning appropriate HTTP responses. The controller is intended to be
+/// used as part of an ASP.NET Core Web API and follows RESTful conventions for resource management.</remarks>
+/// <param name="logger">The logger used to record diagnostic and operational information for the controller.</param>
+/// <param name="customerRepository">The repository used to access and manage customer data.</param>
+/// <param name="validator">The validator used to ensure that customer models meet all required validation rules.</param>
 [Route("api/[controller]")]
 public class CustomersController(
     ILogger<CustomersController> logger,
